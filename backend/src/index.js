@@ -19,8 +19,18 @@ const reservacionRoutes = require('./routes/reservacionRoutes'); // Agregar esta
 // Inicializar app
 const app = express();
 
+//cors para permitir solicitudes desde el frontend
+const corsOptions = {
+  origin: 'https://mesalista.netlify.app', // solo tu frontend
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
+};
+
+app.use(cors(corsOptions));
+
+
 // Middlewares
-app.use(cors());
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(express.json());
