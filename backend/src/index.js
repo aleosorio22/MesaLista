@@ -21,7 +21,10 @@ const app = express();
 
 //cors para permitir solicitudes desde el frontend
 const corsOptions = {
-  origin: 'https://mesalista.netlify.app', // solo tu frontend
+  origin: [
+    'https://mesalista.netlify.app',
+    'https://mesalista.cafeelangel.com'
+  ], 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
