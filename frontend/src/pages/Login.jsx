@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { Eye, EyeOff, Mail, Lock, Loader2 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
+import logo from '../assets/logo.png'
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false)
@@ -40,30 +41,27 @@ export default function Login() {
           
           {/* Logo y título */}
           <div className="text-center space-y-6">
-            <div className="mx-auto w-20 h-20 bg-primary-500 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-2xl">EA</span>
+            <div className="mx-auto w-32 h-32 flex items-center justify-center">
+              <img 
+                src={logo} 
+                alt="Industrias El Ángel" 
+                className="w-full h-full object-contain"
+              />
             </div>
             
             <div className="space-y-2">
               <h1 className="text-2xl font-bold text-text-primary">
-                Industrias El Ángel
+                MesaLista
               </h1>
               <p className="text-text-secondary text-sm">
-                Sistema interno de administración
+                Sistema interno de administración para eventos
               </p>
+              
             </div>
           </div>
 
           {/* Formulario de login */}
           <div className="space-y-6">
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-text-primary text-center">
-                Iniciar Sesión
-              </h2>
-              <p className="text-text-secondary text-center text-sm">
-                Ingrese sus credenciales para acceder al sistema
-              </p>
-            </div>
 
             {/* Mostrar errores */}
             {error && (

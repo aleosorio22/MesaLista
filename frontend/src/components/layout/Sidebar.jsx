@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import logo from "../../assets/logo.png";
 import {
   Home,
   Users,
@@ -92,8 +93,12 @@ export default function Sidebar() {
         {/* Logo y toggle */}
         <div className="flex items-center justify-between h-16 px-4 border-b border-neutral-200">
           <Link to="/admin/dashboard" className="flex items-center">
-            <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">EA</span>
+            <div className="h-10 w-10 flex items-center justify-center">
+              <img 
+                src={logo} 
+                alt="El Ángel" 
+                className="h-8 w-8 object-contain"
+              />
             </div>
             {isExpanded && (
               <span className="ml-3 text-text-primary font-semibold">El Ángel</span>
@@ -189,8 +194,12 @@ export default function Sidebar() {
                 className="flex items-center"
                 onClick={closeMobileSidebar}
               >
-                <div className="h-10 w-10 rounded-full bg-primary-500 flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">EA</span>
+                <div className="h-10 w-10 flex items-center justify-center">
+                  <img 
+                    src={logo} 
+                    alt="El Ángel" 
+                    className="h-8 w-8 object-contain"
+                  />
                 </div>
                 <span className="ml-3 text-text-primary font-semibold">El Ángel</span>
               </Link>
