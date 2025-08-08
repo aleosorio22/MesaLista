@@ -23,7 +23,8 @@ const app = express();
 const corsOptions = {
   origin: [
     'https://mesalista.netlify.app',
-    'https://mesalista.cafeelangel.com'
+    'https://mesalista.cafeelangel.com',
+    'http://localhost:5173'
   ], 
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
