@@ -13,6 +13,7 @@ router.use(authMiddleware);
 // Rutas para reservaciones
 router.post('/', canCreateReservations, reservacionController.createReservacion);
 router.get('/', reservacionController.getAllReservaciones);
+router.get('/proxima-semana', reservacionController.getReservacionesProximaSemana);
 router.get('/:id', reservacionController.getReservacionById);
 router.get('/:id/completa', reservacionController.getReservacionCompleta);
 router.put('/:id', canModifyReservation, reservacionController.updateReservacion);

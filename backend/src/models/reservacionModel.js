@@ -69,6 +69,69 @@ exports.findByFecha = async (fecha) => {
     return rows;
 };
 
+exports.findByFechaRango = async (fechaInicio, fechaFin) => {
+    const query = `
+        SELECT r.*, 
+               c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+               u.nombre AS usuario_nombre
+        FROM reservaciones r
+        LEFT JOIN clientes c ON r.cliente_id = c.id
+        LEFT JOIN usuarios u ON r.usuario_id = u.id
+        WHERE r.fecha >= ? AND r.fecha <= ?
+        ORDER BY r.fecha ASC, r.hora ASC
+    `;
+    
+    const [rows] = await db.execute(query, [fechaInicio, fechaFin]);
+    return rows;
+};
+
+exports.getProximasSemana = async () => {
+    // Calcular fechas para los próximos 7 días en hora local
+    const hoy = new Date();
+    
+    // Asegurar que trabajamos con fechas locales, no UTC
+    const fechaInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+    const fechaFin = new Date(fechaInicio);
+    fechaFin.setDate(fechaFin.getDate() + 6); // +6 porque incluimos el día actual
+    
+    // Formatear fechas para MySQL (YYYY-MM-DD)
+    const formatoFecha = (fecha) => {
+        const año = fecha.getFullYear();
+        const mes = String(fecha.getMonth() + 1).padStart(2, '0');
+        const dia = String(fecha.getDate()).padStart(2, '0');
+        return `${año}-${mes}-${dia}`;
+    };
+    
+    const fechaInicioStr = formatoFecha(fechaInicio);
+    const fechaFinStr = formatoFecha(fechaFin);
+    
+    console.log(`Buscando reservaciones desde ${fechaInicioStr} hasta ${fechaFinStr} (hora local)`);
+    
+    const reservaciones = await this.findByFechaRango(fechaInicioStr, fechaFinStr);
+    
+    // Formatear las fechas para asegurar consistencia
+    // No convertir a Date, mantener como string YYYY-MM-DD
+    const reservacionesFormateadas = reservaciones.map(reservacion => {
+        let fechaFormateada = reservacion.fecha;
+        
+        if (reservacion.fecha instanceof Date) {
+            // Si es Date, convertir a string local (no UTC)
+            const fecha = reservacion.fecha;
+            fechaFormateada = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+        } else if (typeof reservacion.fecha === 'string' && reservacion.fecha.includes('T')) {
+            // Si es ISO string, extraer solo la fecha
+            fechaFormateada = reservacion.fecha.split('T')[0];
+        }
+        
+        return {
+            ...reservacion,
+            fecha: fechaFormateada
+        };
+    });
+    
+    return reservacionesFormateadas;
+};
+
 exports.update = async (id, reservacionData) => {
     // Construir la consulta dinámicamente basada en los campos proporcionados
     const fields = [];

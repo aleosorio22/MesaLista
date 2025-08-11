@@ -89,6 +89,56 @@ exports.getAllReservaciones = async (req, res) => {
     }
 };
 
+// Obtener reservaciones de los próximos 7 días
+exports.getReservacionesProximaSemana = async (req, res) => {
+    try {
+        const reservaciones = await reservacionModel.getProximasSemana();
+        
+        // Agrupar reservaciones por fecha para mejor organización
+        const reservacionesAgrupadas = reservaciones.reduce((grupos, reservacion) => {
+            // Asegurar que la fecha esté en formato string YYYY-MM-DD
+            let fechaKey = reservacion.fecha;
+            
+            // Si por alguna razón es Date, convertir a string local
+            if (reservacion.fecha instanceof Date) {
+                const fecha = reservacion.fecha;
+                fechaKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}-${String(fecha.getDate()).padStart(2, '0')}`;
+            } else if (typeof reservacion.fecha === 'string' && reservacion.fecha.includes('T')) {
+                // Si es ISO string, extraer solo la fecha
+                fechaKey = reservacion.fecha.split('T')[0];
+            }
+            
+            if (!grupos[fechaKey]) {
+                grupos[fechaKey] = [];
+            }
+            grupos[fechaKey].push({
+                ...reservacion,
+                fecha: fechaKey // Asegurar formato consistente
+            });
+            return grupos;
+        }, {});
+        
+        console.log('Reservaciones agrupadas:', Object.keys(reservacionesAgrupadas)); // Para debug
+        console.log('Fechas encontradas:', reservaciones.map(r => r.fecha)); // Para debug
+        
+        res.json({
+            success: true,
+            data: {
+                reservaciones: reservaciones,
+                reservacionesAgrupadas: reservacionesAgrupadas,
+                totalReservaciones: reservaciones.length
+            }
+        });
+    } catch (error) {
+        console.error('Error al obtener reservaciones de la próxima semana:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error al obtener las reservaciones de la próxima semana',
+            error: error.message
+        });
+    }
+};
+
 // Obtener reservación por ID
 exports.getReservacionById = async (req, res) => {
     try {
