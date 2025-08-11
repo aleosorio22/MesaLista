@@ -3,6 +3,7 @@ import { X, Calendar, Clock, Users, MapPin, CreditCard, Package, Plus, Edit, Tra
 import reservationService from '../../services/reservationService';
 import productService from '../../services/productService';
 import Modal from '../../components/common/Modal';
+import AdvancePaymentManager from '../../components/admin/AdvancePaymentManager';
 import { formatDisplayDate } from '../../utils/dateUtils';
 
 export default function ReservationDetailsModal({ isOpen, onClose, reservationId, canModify, onUpdate }) {
@@ -328,7 +329,7 @@ export default function ReservationDetailsModal({ isOpen, onClose, reservationId
               </div>
             </div>
 
-            {/* Totales y anticipos */}
+            {/* Totales y gestión de anticipos */}
             <div className="bg-neutral-50 rounded-xl p-4">
               <h4 className="font-semibold text-text-primary mb-4">Resumen Financiero</h4>
               <div className="space-y-3">
@@ -351,26 +352,20 @@ export default function ReservationDetailsModal({ isOpen, onClose, reservationId
                   </span>
                 </div>
               </div>
-
-              {anticipos && anticipos.length > 0 && (
-                <div className="mt-4">
-                  <h5 className="font-medium text-text-primary mb-2">Anticipos</h5>
-                  <div className="space-y-2">
-                    {anticipos.map((anticipo) => (
-                      <div key={anticipo.id} className="flex justify-between text-sm">
-                        <span className="text-text-secondary">
-                          {new Date(anticipo.fecha).toLocaleDateString('es-GT')}
-                          {anticipo.metodo_pago && ` - ${anticipo.metodo_pago}`}
-                        </span>
-                        <span className="font-medium text-green-600">
-                          Q{parseFloat(anticipo.monto).toFixed(2)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
+
+            {/* Gestión de anticipos/pagos */}
+            <AdvancePaymentManager
+              reservationId={reservationId}
+              anticipos={anticipos}
+              totalEstimada={parseFloat(reservacion.total_estimada || 0)}
+              totalPagado={parseFloat(reservacion.total_pagado || 0)}
+              canModify={canModify}
+              onUpdate={() => {
+                loadReservationDetails();
+                if (onUpdate) onUpdate();
+              }}
+            />
 
             {/* Información adicional */}
             <div className="text-xs text-text-muted text-center">
