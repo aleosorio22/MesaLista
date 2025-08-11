@@ -186,7 +186,7 @@ exports.delete = async (id) => {
 exports.getAll = async (filtros = {}) => {
     let query = `
         SELECT r.*, 
-               c.nombre AS cliente_nombre, c.apellido AS cliente_apellido,
+               c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
                u.nombre AS usuario_nombre
         FROM reservaciones r
         LEFT JOIN clientes c ON r.cliente_id = c.id
@@ -196,9 +196,22 @@ exports.getAll = async (filtros = {}) => {
     const conditions = [];
     const values = [];
     
+    // Filtro de fecha específica (para compatibilidad con funcionalidad existente)
     if (filtros.fecha) {
         conditions.push('r.fecha = ?');
         values.push(filtros.fecha);
+    }
+    
+    // Filtro de búsqueda por nombre o teléfono
+    if (filtros.search) {
+        conditions.push(`(
+            CONCAT(c.nombre, ' ', c.apellido) LIKE ? OR 
+            c.nombre LIKE ? OR 
+            c.apellido LIKE ? OR 
+            c.telefono LIKE ?
+        )`);
+        const searchTerm = `%${filtros.search}%`;
+        values.push(searchTerm, searchTerm, searchTerm, searchTerm);
     }
     
     if (filtros.cliente_id) {
@@ -211,11 +224,40 @@ exports.getAll = async (filtros = {}) => {
         values.push(filtros.usuario_id);
     }
     
+    if (filtros.area) {
+        conditions.push('r.area = ?');
+        values.push(filtros.area);
+    }
+    
+    if (filtros.tipo_reservacion) {
+        conditions.push('r.tipo_reservacion = ?');
+        values.push(filtros.tipo_reservacion);
+    }
+    
     if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
     }
     
-    query += ' ORDER BY r.fecha DESC, r.hora ASC';
+    // Orden inteligente: próximas primero, luego pasadas (más recientes primero)
+    query += ` 
+        ORDER BY 
+            CASE 
+                WHEN r.fecha >= CURDATE() THEN 0 
+                ELSE 1 
+            END,
+            CASE 
+                WHEN r.fecha >= CURDATE() THEN r.fecha 
+                ELSE r.fecha 
+            END ASC,
+            CASE 
+                WHEN r.fecha >= CURDATE() THEN r.hora 
+                ELSE r.hora 
+            END ASC,
+            CASE 
+                WHEN r.fecha < CURDATE() THEN r.fecha 
+                ELSE NULL 
+            END DESC
+    `;
     
     const [rows] = await db.execute(query, values);
     return rows;

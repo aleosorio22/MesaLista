@@ -310,11 +310,11 @@ const WeeklyReservations = () => {
                         <div>
                           <p className="font-medium text-text-primary">{producto.producto_nombre}</p>
                           <p className="text-sm text-text-secondary">
-                            Cantidad: {producto.cantidad} × ${producto.precio_unitario}
+                            Cantidad: {producto.cantidad} × ${parseFloat(producto.precio_unitario || 0).toFixed(2)}
                           </p>
                         </div>
                         <p className="font-semibold text-text-primary">
-                          ${producto.subtotal}
+                          ${parseFloat(producto.subtotal || 0).toFixed(2)}
                         </p>
                       </div>
                     ))}
@@ -333,19 +333,19 @@ const WeeklyReservations = () => {
                   <div>
                     <p className="text-sm text-text-secondary">Total estimado</p>
                     <p className="font-semibold text-text-primary">
-                      ${selectedReservation.reservacion?.total_estimada || '0.00'}
+                      ${parseFloat(selectedReservation.reservacion?.total_estimada || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary">Total pagado</p>
                     <p className="font-semibold text-success-600">
-                      ${selectedReservation.reservacion?.total_pagado || '0.00'}
+                      ${parseFloat(selectedReservation.reservacion?.total_pagado || 0).toFixed(2)}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-text-secondary">Pendiente</p>
                     <p className="font-semibold text-error-600">
-                      ${selectedReservation.reservacion?.total_pendiente || '0.00'}
+                      ${parseFloat(selectedReservation.reservacion?.total_pendiente || 0).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -363,7 +363,7 @@ const WeeklyReservations = () => {
                     {selectedReservation.anticipos.map((anticipo) => (
                       <div key={anticipo.id} className="flex justify-between items-center">
                         <div>
-                          <p className="font-medium text-text-primary">${anticipo.monto}</p>
+                          <p className="font-medium text-text-primary">${parseFloat(anticipo.monto || 0).toFixed(2)}</p>
                           <p className="text-sm text-text-secondary">
                             {anticipo.metodo_pago} - {new Date(anticipo.fecha).toLocaleDateString('es-ES')}
                           </p>

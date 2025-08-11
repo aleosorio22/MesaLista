@@ -73,11 +73,40 @@ exports.getAllReservaciones = async (req, res) => {
         if (req.query.fecha) filtros.fecha = req.query.fecha;
         if (req.query.cliente_id) filtros.cliente_id = req.query.cliente_id;
         if (req.query.usuario_id) filtros.usuario_id = req.query.usuario_id;
+        if (req.query.search) filtros.search = req.query.search;
+        if (req.query.area) filtros.area = req.query.area;
+        if (req.query.tipo_reservacion) filtros.tipo_reservacion = req.query.tipo_reservacion;
+        
+        console.log('Filtros aplicados:', filtros); // Para debug
         
         const reservaciones = await reservacionModel.getAll(filtros);
+        
+        // Categorizar reservaciones para mejor manejo en frontend
+        const hoy = new Date();
+        const hoyStr = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${String(hoy.getDate()).padStart(2, '0')}`;
+        
+        const categorizadas = {
+            proximas: [],
+            pasadas: [],
+            total: reservaciones.length
+        };
+        
+        reservaciones.forEach(reservacion => {
+            const fechaReservacion = reservacion.fecha instanceof Date ? 
+                reservacion.fecha.toISOString().split('T')[0] : 
+                reservacion.fecha;
+                
+            if (fechaReservacion >= hoyStr) {
+                categorizadas.proximas.push(reservacion);
+            } else {
+                categorizadas.pasadas.push(reservacion);
+            }
+        });
+        
         res.json({
             success: true,
-            data: reservaciones
+            data: reservaciones,
+            categorized: categorizadas
         });
     } catch (error) {
         console.error('Error al obtener reservaciones:', error);
