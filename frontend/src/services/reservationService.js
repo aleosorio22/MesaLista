@@ -31,9 +31,16 @@ const reservationService = {
   getAllReservations: async (filters = {}) => {
     try {
       const params = new URLSearchParams();
+      
+      // Filtros existentes
       if (filters.fecha) params.append('fecha', filters.fecha);
       if (filters.cliente_id) params.append('cliente_id', filters.cliente_id);
       if (filters.usuario_id) params.append('usuario_id', filters.usuario_id);
+      
+      // Nuevos filtros
+      if (filters.search) params.append('search', filters.search);
+      if (filters.area) params.append('area', filters.area);
+      if (filters.tipo_reservacion) params.append('tipo_reservacion', filters.tipo_reservacion);
 
       const url = params.toString() ? 
         `${API_BASE_URL}/reservaciones?${params.toString()}` : 
@@ -41,6 +48,19 @@ const reservationService = {
 
       const response = await axios.get(url, getAuthHeaders());
       return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
+
+  // Búsqueda inteligente de reservaciones (próximas + pasadas ordenadas)
+  searchReservations: async (searchTerm, additionalFilters = {}) => {
+    try {
+      const filters = {
+        search: searchTerm,
+        ...additionalFilters
+      };
+      return await reservationService.getAllReservations(filters);
     } catch (error) {
       throw error.response ? error.response.data : error;
     }
