@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Clock, Users, MapPin, Phone, Edit, Trash2, Eye, DollarSign, MoreVertical } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { formatDisplayDate } from '../../utils/dateUtils';
 
 export default function ReservationCard({ reservation, canModify, onUpdate, onView, onEdit, onDelete }) {
   const { auth } = useAuth();
@@ -12,8 +13,8 @@ export default function ReservationCard({ reservation, canModify, onUpdate, onVi
 
   const formatDate = (date) => {
     if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('es-GT', { 
+    return formatDisplayDate(date, { 
+      showRelative: false,
       weekday: 'short', 
       month: 'short', 
       day: 'numeric' 

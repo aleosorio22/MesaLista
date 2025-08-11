@@ -3,6 +3,7 @@ import { X, Calendar, Clock, Users, MapPin, CreditCard, Package, Plus, Edit, Tra
 import reservationService from '../../services/reservationService';
 import productService from '../../services/productService';
 import Modal from '../../components/common/Modal';
+import { formatDisplayDate } from '../../utils/dateUtils';
 
 export default function ReservationDetailsModal({ isOpen, onClose, reservationId, canModify, onUpdate }) {
   const [loading, setLoading] = useState(true);
@@ -51,8 +52,8 @@ export default function ReservationDetailsModal({ isOpen, onClose, reservationId
 
   const formatDate = (date) => {
     if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('es-GT', { 
+    return formatDisplayDate(date, { 
+      showRelative: false,
       weekday: 'long',
       year: 'numeric',
       month: 'long',

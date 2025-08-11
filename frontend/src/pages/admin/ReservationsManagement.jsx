@@ -8,6 +8,7 @@ import ReservationFilters from './ReservationFilters';
 import ReservationDetailsModal from './ReservationDetailsModal';
 import EditReservationModal from './EditReservationModal';
 import DeleteReservationModal from './DeleteReservationModal';
+import { formatDisplayDate, formatLocalDate } from '../../utils/dateUtils';
 
 export default function ReservationsManagement() {
   const { auth } = useAuth();
@@ -15,7 +16,7 @@ export default function ReservationsManagement() {
   const [filteredReservations, setFilteredReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState(formatLocalDate(new Date()));
   const [filters, setFilters] = useState({});
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -30,6 +31,9 @@ export default function ReservationsManagement() {
   const isVisualizer = auth?.user?.rol === 'visualizador';
   const canCreateReservations = true; // Todos los roles pueden crear
   const canModifyAny = isAdmin || isEditor; // Solo admin y editor pueden modificar cualquiera
+
+  // Inicializar selectedDate con formato local
+  const [selectedDateState, setSelectedDateState] = useState(formatLocalDate(new Date()));
 
   useEffect(() => {
     loadReservations();
@@ -128,8 +132,12 @@ export default function ReservationsManagement() {
   };
 
   const getTodayStats = () => {
-    const today = new Date().toISOString().split('T')[0];
-    const todayReservations = reservations.filter(r => r.fecha === today);
+    const today = formatLocalDate(new Date()); // Usar formato local consistente
+    const todayReservations = reservations.filter(r => {
+      // Asegurar que comparamos fechas en el mismo formato
+      const reservationDate = r.fecha instanceof Date ? formatLocalDate(r.fecha) : r.fecha;
+      return reservationDate === today;
+    });
     
     return {
       total: todayReservations.length,
@@ -145,10 +153,10 @@ export default function ReservationsManagement() {
       {/* Header móvil */}
       <div className="sticky top-0 z-20 bg-white border-b border-neutral-200 px-4 py-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
+          <div>   
             <h1 className="text-xl font-bold text-text-primary">Reservaciones</h1>
             <p className="text-sm text-text-secondary">
-              {selectedDate === new Date().toISOString().split('T')[0] ? 'Hoy' : selectedDate}
+              {selectedDate === formatLocalDate(new Date()) ? 'Hoy' : formatDisplayDate(selectedDate, { showRelative: false })}
             </p>
           </div>
           {canCreateReservations && (

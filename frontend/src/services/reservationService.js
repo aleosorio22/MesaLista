@@ -46,6 +46,19 @@ const reservationService = {
     }
   },
 
+  // Obtener reservaciones de los próximos 7 días (todos los roles)
+  getWeeklyReservations: async () => {
+    try {
+      const response = await axios.get(
+        `${API_BASE_URL}/reservaciones/proxima-semana`,
+        getAuthHeaders()
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response ? error.response.data : error;
+    }
+  },
+
   // Obtener reservación por ID (todos los roles)
   getReservationById: async (id) => {
     try {

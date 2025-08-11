@@ -3,6 +3,7 @@ import { X, ArrowLeft, ArrowRight, Check, Calendar, Users, MapPin, Clock, User, 
 import clientService from '../../services/clientService';
 import reservationService from '../../services/reservationService';
 import Modal from '../../components/common/Modal';
+import { formatLocalDate } from '../../utils/dateUtils';
 
 export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
   const [currentStep, setCurrentStep] = useState(1);
@@ -23,7 +24,7 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
     },
     
     // Paso 2: Fecha y hora
-    fecha: new Date().toISOString().split('T')[0],
+    fecha: formatLocalDate(new Date()),
     hora: '',
     
     // Paso 3: Detalles
@@ -81,7 +82,7 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
     setFormData({
       cliente_id: '',
       newClient: { nombre: '', apellido: '', telefono: '', email: '' },
-      fecha: new Date().toISOString().split('T')[0],
+      fecha: formatLocalDate(new Date()),
       hora: '',
       cantidad_personas: 1,
       area: '',
@@ -121,9 +122,16 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
           newErrors.hora = 'La hora es obligatoria';
         }
         // Validar que la fecha no sea en el pasado
-        const selectedDate = new Date(formData.fecha + 'T' + formData.hora);
-        if (selectedDate < new Date()) {
-          newErrors.fecha = 'La fecha y hora no pueden ser en el pasado';
+        const selectedDate = new Date(formData.fecha + 'T' + (formData.hora || '00:00'));
+        const now = new Date();
+        // Crear fecha actual sin tiempo para comparar solo la fecha
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const reservationDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+        
+        if (reservationDate < today) {
+          newErrors.fecha = 'La fecha no puede ser en el pasado';
+        } else if (reservationDate.getTime() === today.getTime() && selectedDate < now) {
+          newErrors.fecha = 'La hora no puede ser en el pasado para hoy';
         }
         break;
       
