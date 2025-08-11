@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X, ArrowLeft, ArrowRight, Check, Calendar, Users, MapPin, Clock, User, MessageSquare, CreditCard } from 'lucide-react';
+import { X, ArrowLeft, ArrowRight, Check, Calendar, Users, MapPin, Clock, User, MessageSquare, CreditCard, Search, UtensilsCrossed, Home, Building, FileText, ChefHat } from 'lucide-react';
 import clientService from '../../services/clientService';
 import reservationService from '../../services/reservationService';
 import Modal from '../../components/common/Modal';
@@ -11,6 +11,7 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
   const [clients, setClients] = useState([]);
   const [showNewClientForm, setShowNewClientForm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [clientSearchQuery, setClientSearchQuery] = useState('');
 
   // Datos del formulario
   const [formData, setFormData] = useState({
@@ -47,14 +48,14 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
   ];
 
   const areas = [
-    { value: 'Restaurante', label: 'Restaurante', icon: '�️', description: 'Área principal del restaurante' },
-    { value: 'Salón Principal', label: 'Salón Principal', icon: '�️', description: 'Salón grande para eventos' },
-    { value: 'Salón pequeño', label: 'Salón Pequeño', icon: '�', description: 'Salón íntimo para grupos pequeños' }
+    { value: 'Restaurante', label: 'Restaurante', icon: UtensilsCrossed, description: 'Área principal del restaurante' },
+    { value: 'Salón Principal', label: 'Salón Principal', icon: Building, description: 'Salón grande para eventos' },
+    { value: 'Salón pequeño', label: 'Salón Pequeño', icon: Home, description: 'Salón íntimo para grupos pequeños' }
   ];
 
   const tiposReservacion = [
-    { value: 'Carta abierta', label: 'Carta Abierta', icon: '📋', description: 'El cliente elige del menú disponible' },
-    { value: 'Orden previa', label: 'Orden Previa', icon: '�', description: 'Menú predefinido acordado previamente' }
+    { value: 'Carta abierta', label: 'Carta Abierta', icon: FileText, description: 'El cliente elige del menú disponible' },
+    { value: 'Orden previa', label: 'Orden Previa', icon: ChefHat, description: 'Menú predefinido acordado previamente' }
   ];
 
   useEffect(() => {
@@ -79,6 +80,7 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
     setCurrentStep(1);
     setShowNewClientForm(false);
     setShowSuccess(false);
+    setClientSearchQuery('');
     setFormData({
       cliente_id: '',
       newClient: { nombre: '', apellido: '', telefono: '', email: '' },
@@ -92,6 +94,17 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
     });
     setErrors({});
   };
+
+  // Filtrar clientes basado en la búsqueda
+  const filteredClients = clients.filter(client => {
+    if (!clientSearchQuery) return true;
+    
+    const searchLower = clientSearchQuery.toLowerCase();
+    const nombreCompleto = `${client.nombre} ${client.apellido}`.toLowerCase();
+    const telefono = client.telefono?.toLowerCase() || '';
+    
+    return nombreCompleto.includes(searchLower) || telefono.includes(searchLower);
+  });
 
   const validateStep = (step) => {
     const newErrors = {};
@@ -166,36 +179,48 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
     try {
       const response = await clientService.createClient(formData.newClient);
       if (response.success) {
+        // Actualizar cliente_id y cerrar formulario de cliente nuevo
         setFormData(prev => ({
           ...prev,
           cliente_id: response.data.id
         }));
         setShowNewClientForm(false);
         await loadClients();
-        return true;
+        return response.data.id; // Retornar el ID del cliente creado
       }
+      return null;
     } catch (error) {
       console.error('Error al crear cliente:', error);
       setErrors({ general: error.message || 'Error al crear cliente' });
-      return false;
+      return null;
     }
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) return;
-
     try {
       setLoading(true);
+      let clienteIdFinal = formData.cliente_id;
 
       // Si es un cliente nuevo, crearlo primero
       if (showNewClientForm) {
-        const clientCreated = await handleCreateClient();
-        if (!clientCreated) return;
+        const newClientId = await handleCreateClient();
+        if (!newClientId) {
+          setLoading(false);
+          return;
+        }
+        clienteIdFinal = newClientId; // Usar el ID retornado directamente
+      }
+
+      // Validar que tenemos cliente_id
+      if (!clienteIdFinal) {
+        setErrors({ general: 'Debe seleccionar un cliente para crear la reservación' });
+        setLoading(false);
+        return;
       }
 
       // Crear la reservación
       const reservationData = {
-        cliente_id: formData.cliente_id,
+        cliente_id: clienteIdFinal,
         fecha: formData.fecha,
         hora: formData.hora,
         cantidad_personas: parseInt(formData.cantidad_personas),
@@ -255,6 +280,21 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
 
       {!showNewClientForm ? (
         <div className="space-y-4">
+          {/* Input de búsqueda */}
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="h-5 w-5 text-neutral-400" />
+            </div>
+            <input
+              type="text"
+              placeholder="Buscar cliente por nombre o teléfono..."
+              value={clientSearchQuery}
+              onChange={(e) => setClientSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-neutral-200 rounded-xl bg-white text-base focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          {/* Dropdown de clientes filtrados */}
           <div className="relative">
             <select
               value={formData.cliente_id}
@@ -263,8 +303,13 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                 errors.cliente_id ? 'border-error-300' : 'border-neutral-200'
               }`}
             >
-              <option value="">Seleccionar cliente existente...</option>
-              {clients.map(client => (
+              <option value="">
+                {clientSearchQuery ? 
+                  `${filteredClients.length} cliente${filteredClients.length !== 1 ? 's' : ''} encontrado${filteredClients.length !== 1 ? 's' : ''}` : 
+                  'Seleccionar cliente existente...'
+                }
+              </option>
+              {filteredClients.map(client => (
                 <option key={client.id} value={client.id}>
                   {client.nombre} {client.apellido} - {client.telefono}
                 </option>
@@ -272,6 +317,13 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
             </select>
             {errors.cliente_id && (
               <p className="text-error-600 text-sm mt-1">{errors.cliente_id}</p>
+            )}
+            
+            {/* Mensaje cuando no hay resultados */}
+            {clientSearchQuery && filteredClients.length === 0 && (
+              <div className="absolute top-full left-0 right-0 bg-white border border-neutral-200 rounded-b-xl shadow-lg p-3 text-sm text-neutral-500">
+                No se encontraron clientes que coincidan con "{clientSearchQuery}"
+              </div>
             )}
           </div>
 
@@ -480,7 +532,9 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                     : 'border-neutral-200 hover:border-neutral-300'
                 }`}
               >
-                <div className="text-2xl mb-2">{area.icon}</div>
+                <div className="mb-2">
+                  <area.icon className="w-8 h-8 text-primary-600" />
+                </div>
                 <div className="font-medium text-text-primary">{area.label}</div>
                 <div className="text-xs text-text-secondary">{area.description}</div>
               </button>
@@ -508,7 +562,9 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
                     : 'border-neutral-200 hover:border-neutral-300'
                 }`}
               >
-                <div className="text-2xl mb-2">{tipo.icon}</div>
+                <div className="mb-2">
+                  <tipo.icon className="w-8 h-8 text-primary-600" />
+                </div>
                 <div className="font-medium text-text-primary">{tipo.label}</div>
                 <div className="text-xs text-text-secondary">{tipo.description}</div>
               </button>
@@ -521,6 +577,25 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
       </div>
     </div>
   );
+
+  // Función auxiliar para obtener el cliente seleccionado
+  const getSelectedClientName = () => {
+    if (showNewClientForm) {
+      return `${formData.newClient.nombre} ${formData.newClient.apellido}`.trim();
+    }
+    
+    if (!formData.cliente_id) {
+      return 'Cliente no seleccionado';
+    }
+    
+    // Convertir ambos a string para comparación segura
+    const clienteIdString = String(formData.cliente_id);
+    const selectedClient = clients.find(c => String(c.id) === clienteIdString);
+    
+    return selectedClient 
+      ? `${selectedClient.nombre} ${selectedClient.apellido}`.trim()
+      : 'Cliente no seleccionado';
+  };
 
   const renderStep4 = () => (
     <div className="space-y-6">
@@ -572,11 +647,7 @@ export default function CreateReservationModal({ isOpen, onClose, onSuccess }) {
             <div className="flex justify-between">
               <span className="text-text-secondary">Cliente:</span>
               <span className="text-text-primary font-medium">
-                {showNewClientForm 
-                  ? `${formData.newClient.nombre} ${formData.newClient.apellido}`
-                  : clients.find(c => c.id === formData.cliente_id)?.nombre + ' ' + 
-                    clients.find(c => c.id === formData.cliente_id)?.apellido
-                }
+                {getSelectedClientName()}
               </span>
             </div>
             <div className="flex justify-between">
