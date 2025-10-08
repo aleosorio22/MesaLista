@@ -20,12 +20,12 @@ router.put('/:id', canModifyReservation, reservacionController.updateReservacion
 router.delete('/:id', canModifyReservation, reservacionController.deleteReservacion);
 
 // Rutas para productos de reservaciones
-router.post('/:reservacion_id/productos', canModifyReservation, reservacionController.addProductoReservacion);
+router.post('/:id/productos', canModifyReservation, reservacionController.addProductoReservacion);
 router.put('/productos/:id', reservacionController.updateProductoReservacion);
 router.delete('/productos/:id', reservacionController.removeProductoReservacion);
 
 // Rutas para anticipos
-router.post('/:reservacion_id/anticipos', canModifyReservation, reservacionController.addAnticipoReservacion);
+router.post('/:id/anticipos', canModifyReservation, reservacionController.addAnticipoReservacion);
 router.delete('/anticipos/:id', reservacionController.removeAnticipoReservacion);
 
 module.exports = router;
