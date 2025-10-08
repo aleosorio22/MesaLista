@@ -340,7 +340,7 @@ exports.deleteReservacion = async (req, res) => {
 // Agregar producto a la reservación
 exports.addProductoReservacion = async (req, res) => {
     try {
-        const { reservacion_id } = req.params;
+        const { id: reservacionId } = req.params; // Cambiar nombre para evitar conflicto
         const { producto_id, cantidad } = req.body;
         
         // Validar datos
@@ -352,7 +352,7 @@ exports.addProductoReservacion = async (req, res) => {
         }
         
         // Verificar si la reservación existe
-        const reservacion = await reservacionModel.findById(reservacion_id);
+        const reservacion = await reservacionModel.findById(reservacionId);
         if (!reservacion) {
             return res.status(404).json({
                 success: false,
@@ -377,8 +377,8 @@ exports.addProductoReservacion = async (req, res) => {
         }
         
         // Agregar producto a la reservación
-        const id = await reservacionModel.addProducto({
-            reservacion_id,
+        const productoId = await reservacionModel.addProducto({
+            reservacion_id: reservacionId,
             producto_id,
             cantidad,
             precio_unitario: producto.precio
@@ -387,7 +387,7 @@ exports.addProductoReservacion = async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Producto agregado a la reservación exitosamente',
-            data: { id }
+            data: { id: productoId }
         });
     } catch (error) {
         console.error('Error al agregar producto a la reservación:', error);
@@ -465,11 +465,11 @@ exports.removeProductoReservacion = async (req, res) => {
         });
     }
 };
-
+        
 // Agregar anticipo a la reservación
 exports.addAnticipoReservacion = async (req, res) => {
     try {
-        const { reservacion_id } = req.params;
+        const { id: reservacionId } = req.params; // Cambiar nombre para evitar conflicto
         const { monto, metodo_pago, observaciones } = req.body;
         
         // Validar datos
@@ -481,7 +481,7 @@ exports.addAnticipoReservacion = async (req, res) => {
         }
         
         // Verificar si la reservación existe
-        const reservacion = await reservacionModel.findById(reservacion_id);
+        const reservacion = await reservacionModel.findById(reservacionId);
         if (!reservacion) {
             return res.status(404).json({
                 success: false,
@@ -490,8 +490,8 @@ exports.addAnticipoReservacion = async (req, res) => {
         }
         
         // Agregar anticipo
-        const id = await reservacionModel.addAnticipo({
-            reservacion_id,
+        const anticipoId = await reservacionModel.addAnticipo({
+            reservacion_id: reservacionId,
             monto,
             metodo_pago,
             observaciones
@@ -500,7 +500,7 @@ exports.addAnticipoReservacion = async (req, res) => {
         res.status(201).json({
             success: true,
             message: 'Anticipo agregado exitosamente',
-            data: { id }
+            data: { id: anticipoId }
         });
     } catch (error) {
         console.error('Error al agregar anticipo:', error);
@@ -512,7 +512,6 @@ exports.addAnticipoReservacion = async (req, res) => {
     }
 };
 
-// Eliminar anticipo
 exports.removeAnticipoReservacion = async (req, res) => {
     try {
         const { id } = req.params;

@@ -3,7 +3,6 @@ const usuarioModel = require('../models/usuarioModel');
 
 const authMiddleware = async (req, res, next) => {
     try {
-        // Verificar formato del header
         const authHeader = req.headers.authorization;
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({ message: 'Formato de token inválido' });
@@ -14,13 +13,11 @@ const authMiddleware = async (req, res, next) => {
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
             
-            // Verificar si el usuario existe
             const user = await usuarioModel.findById(decoded.id);
             if (!user) {
                 return res.status(403).json({ message: 'Usuario no encontrado' });
             }
 
-            // Agregar información del usuario al request
             req.user = {
                 id: decoded.id,
                 rol: decoded.rol
@@ -60,13 +57,10 @@ const isEditorOrAdmin = (req, res, next) => {
     });
 };
 
-// Middleware para operaciones de lectura de clientes (todos los roles)
 const canReadClients = (req, res, next) => {
-    // Todos los roles autenticados pueden leer clientes
     return next();
 };
 
-// Middleware para operaciones de escritura de clientes (admin y editor)
 const canWriteClients = (req, res, next) => {
     if (req.user.rol === 'admin' || req.user.rol === 'editor') {
         return next();
@@ -77,24 +71,19 @@ const canWriteClients = (req, res, next) => {
     });
 };
 
-// Middleware para crear reservaciones (todos los roles autenticados)
 const canCreateReservations = (req, res, next) => {
-    // Todos los roles autenticados pueden crear reservaciones
     return next();
 };
 
-// Middleware para editar/eliminar reservaciones
 const canModifyReservation = async (req, res, next) => {
     const { id } = req.params;
     const userId = req.user.id;
     const userRole = req.user.rol;
     
-    // Admin y editor pueden modificar cualquier reservación
     if (userRole === 'admin' || userRole === 'editor') {
         return next();
     }
     
-    // Visualizador solo puede modificar sus propias reservaciones
     if (userRole === 'visualizador') {
         try {
             const reservacionModel = require('../models/reservacionModel');

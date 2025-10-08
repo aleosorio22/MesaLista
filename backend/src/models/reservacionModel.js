@@ -46,11 +46,30 @@ exports.create = async (reservacionData) => {
 };
 
 exports.findById = async (id) => {
-    const [rows] = await db.execute(
-        'SELECT * FROM reservaciones WHERE id = ?',
-        [id]
-    );
-    return rows[0];
+    // 🔍 LOG DE INVESTIGACIÓN
+    console.log('=== DEBUG reservacionModel.findById ===');
+    console.log('ID recibido:', id, 'tipo:', typeof id);
+    console.log('ID es undefined?', id === undefined);
+    console.log('ID es null?', id === null);
+    
+    try {
+        const [rows] = await db.execute(
+            'SELECT * FROM reservaciones WHERE id = ?',
+            [id]
+        );
+        console.log('Consulta ejecutada exitosamente, filas encontradas:', rows.length);
+        if (rows.length > 0) {
+            console.log('Reservación encontrada:', {
+                id: rows[0].id,
+                usuario_id: rows[0].usuario_id,
+                cliente_id: rows[0].cliente_id
+            });
+        }
+        return rows[0];
+    } catch (error) {
+        console.log('💥 ERROR en findById SQL:', error);
+        throw error;
+    }
 };
 
 exports.findByClienteId = async (clienteId) => {
