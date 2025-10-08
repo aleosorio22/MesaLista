@@ -199,7 +199,7 @@ exports.getReservacionById = async (req, res) => {
 exports.getReservacionCompleta = async (req, res) => {
     try {
         const { id } = req.params;
-        const reservacion = await reservacionModel.findById(id);
+        const reservacion = await reservacionModel.findByIdComplete(id);
         
         if (!reservacion) {
             return res.status(404).json({
