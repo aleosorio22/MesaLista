@@ -12,6 +12,9 @@ import UsersManagement from "../pages/admin/UsersManagement";
 import ClientsManagement from "../pages/admin/ClientsManagement";
 import ProductsManagement from "../pages/admin/ProductsManagement";
 import ReservationsManagement from "../pages/admin/ReservationsManagement";
+import CreateReservationPage from "../pages/admin/CreateReservationPage";
+import EditReservationPage from "../pages/admin/EditReservationPage";
+import ReservationDetailsPage from "../pages/admin/ReservationDetailsPage";
 import NotFound from "../pages/NotFound";
 
 function AppRouter() {
@@ -48,6 +51,9 @@ function AppRouter() {
             <Route path="/admin/clientes" element={<ClientsManagement />} />
             <Route path="/admin/productos" element={<ProductsManagement />} />
             <Route path="/admin/reservaciones" element={<ReservationsManagement />} />
+            <Route path="/admin/reservaciones/crear" element={<CreateReservationPage />} />
+            <Route path="/admin/reservaciones/:id/editar" element={<EditReservationPage />} />
+            <Route path="/admin/reservaciones/:id/ver" element={<ReservationDetailsPage />} />
             <Route path="*" element={<NotFound />} />
           </Route>
         )}
