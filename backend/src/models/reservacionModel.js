@@ -72,6 +72,26 @@ exports.findById = async (id) => {
     }
 };
 
+exports.findByIdComplete = async (id) => {
+    try {
+        const query = `
+            SELECT r.*, 
+                   c.nombre AS cliente_nombre, c.apellido AS cliente_apellido, c.telefono AS cliente_telefono,
+                   u.nombre AS usuario_nombre
+            FROM reservaciones r
+            LEFT JOIN clientes c ON r.cliente_id = c.id
+            LEFT JOIN usuarios u ON r.usuario_id = u.id
+            WHERE r.id = ?
+        `;
+        
+        const [rows] = await db.execute(query, [id]);
+        return rows[0];
+    } catch (error) {
+        console.log('💥 ERROR en findByIdComplete SQL:', error);
+        throw error;
+    }
+};
+
 exports.findByClienteId = async (clienteId) => {
     const [rows] = await db.execute(
         'SELECT * FROM reservaciones WHERE cliente_id = ? ORDER BY fecha DESC, hora DESC',
