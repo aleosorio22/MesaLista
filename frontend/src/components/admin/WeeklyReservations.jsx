@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Calendar, 
   Clock, 
@@ -11,16 +12,14 @@ import {
   Eye
 } from 'lucide-react';
 import reservationService from '../../services/reservationService';
-import Modal from '../common/Modal';
 import { formatDisplayDate, formatLocalDate } from '../../utils/dateUtils';
 
 const WeeklyReservations = () => {
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState([]);
   const [groupedReservations, setGroupedReservations] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedReservation, setSelectedReservation] = useState(null);
-  const [showModal, setShowModal] = useState(false);
 
   // Función para formatear fecha - USANDO UTILIDADES
   const formatDate = (dateString) => {
@@ -38,18 +37,9 @@ const WeeklyReservations = () => {
     }
   };
 
-  // Función para abrir modal con detalles de reservación
-  const handleReservationClick = async (reservacion) => {
-    try {
-      // Obtener detalles completos de la reservación
-      const response = await reservationService.getCompleteReservation(reservacion.id);
-      if (response.success) {
-        setSelectedReservation(response.data);
-        setShowModal(true);
-      }
-    } catch (error) {
-      console.error('Error al cargar detalles de reservación:', error);
-    }
+  // Función para navegar a los detalles de reservación
+  const handleReservationClick = (reservacion) => {
+    navigate(`/admin/reservaciones/${reservacion.id}/ver`);
   };
 
   // Cargar reservaciones
@@ -203,185 +193,13 @@ const WeeklyReservations = () => {
       )}
 
       <div className="mt-4 pt-4 border-t border-neutral-200">
-        <button className="text-primary-600 text-sm hover:text-primary-700 transition-colors">
+        <button 
+          onClick={() => navigate('/admin/reservaciones')}
+          className="text-primary-600 text-sm hover:text-primary-700 transition-colors"
+        >
           Ver todas las reservaciones →
         </button>
       </div>
-
-      {/* Modal de detalles de reservación */}
-      <Modal
-        isOpen={showModal}
-        onClose={() => setShowModal(false)}
-        title="Detalles de la Reservación"
-        size="lg"
-      >
-        {selectedReservation && (
-          <div className="space-y-6">
-            {/* Información del cliente */}
-            <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-3">
-                Información del Cliente
-              </h3>
-              <div className="bg-background-muted rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-text-secondary">Nombre completo</p>
-                    <p className="font-medium text-text-primary">
-                      {selectedReservation.cliente?.nombre} {selectedReservation.cliente?.apellido}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-text-secondary">Teléfono</p>
-                    <p className="font-medium text-text-primary">
-                      {selectedReservation.cliente?.telefono || 'No disponible'}
-                    </p>
-                  </div>
-                  {selectedReservation.cliente?.correo && (
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-text-secondary">Correo</p>
-                      <p className="font-medium text-text-primary">
-                        {selectedReservation.cliente.correo}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Detalles de la reservación */}
-            <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-3">
-                Detalles de la Reservación
-              </h3>
-              <div className="bg-background-muted rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-text-secondary">Fecha</p>
-                    <p className="font-medium text-text-primary">
-                      {formatDate(selectedReservation.reservacion?.fecha)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-text-secondary">Hora</p>
-                    <p className="font-medium text-text-primary">
-                      {formatTime(selectedReservation.reservacion?.hora)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-text-secondary">Cantidad de personas</p>
-                    <p className="font-medium text-text-primary">
-                      {selectedReservation.reservacion?.cantidad_personas} persona{selectedReservation.reservacion?.cantidad_personas !== 1 ? 's' : ''}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-text-secondary">Área</p>
-                    <span className={`inline-block text-xs px-2 py-1 rounded ${getAreaColor(selectedReservation.reservacion?.area)}`}>
-                      {selectedReservation.reservacion?.area}
-                    </span>
-                  </div>
-                  <div className="md:col-span-2">
-                    <p className="text-sm text-text-secondary">Tipo de reservación</p>
-                    <span className={`inline-block text-xs px-2 py-1 rounded ${getReservationTypeColor(selectedReservation.reservacion?.tipo_reservacion)}`}>
-                      {selectedReservation.reservacion?.tipo_reservacion}
-                    </span>
-                  </div>
-                  {selectedReservation.reservacion?.observaciones && (
-                    <div className="md:col-span-2">
-                      <p className="text-sm text-text-secondary">Observaciones</p>
-                      <p className="font-medium text-text-primary">
-                        {selectedReservation.reservacion.observaciones}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Productos (si los hay) */}
-            {selectedReservation.productos && selectedReservation.productos.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-text-primary mb-3">
-                  Productos Ordenados
-                </h3>
-                <div className="bg-background-muted rounded-lg p-4">
-                  <div className="space-y-2">
-                    {selectedReservation.productos.map((producto) => (
-                      <div key={producto.id} className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-text-primary">{producto.producto_nombre}</p>
-                          <p className="text-sm text-text-secondary">
-                            Cantidad: {producto.cantidad} × ${parseFloat(producto.precio_unitario || 0).toFixed(2)}
-                          </p>
-                        </div>
-                        <p className="font-semibold text-text-primary">
-                          ${parseFloat(producto.subtotal || 0).toFixed(2)}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Información de pagos */}
-            <div>
-              <h3 className="text-lg font-semibold text-text-primary mb-3">
-                Información de Pagos
-              </h3>
-              <div className="bg-background-muted rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-text-secondary">Total estimado</p>
-                    <p className="font-semibold text-text-primary">
-                      ${parseFloat(selectedReservation.reservacion?.total_estimada || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-text-secondary">Total pagado</p>
-                    <p className="font-semibold text-success-600">
-                      ${parseFloat(selectedReservation.reservacion?.total_pagado || 0).toFixed(2)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-text-secondary">Pendiente</p>
-                    <p className="font-semibold text-error-600">
-                      ${parseFloat(selectedReservation.reservacion?.total_pendiente || 0).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Anticipos (si los hay) */}
-            {selectedReservation.anticipos && selectedReservation.anticipos.length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-text-primary mb-3">
-                  Anticipos Recibidos
-                </h3>
-                <div className="bg-background-muted rounded-lg p-4">
-                  <div className="space-y-2">
-                    {selectedReservation.anticipos.map((anticipo) => (
-                      <div key={anticipo.id} className="flex justify-between items-center">
-                        <div>
-                          <p className="font-medium text-text-primary">${parseFloat(anticipo.monto || 0).toFixed(2)}</p>
-                          <p className="text-sm text-text-secondary">
-                            {anticipo.metodo_pago} - {new Date(anticipo.fecha).toLocaleDateString('es-ES')}
-                          </p>
-                        </div>
-                        {anticipo.observaciones && (
-                          <p className="text-sm text-text-muted italic">
-                            {anticipo.observaciones}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </Modal>
     </div>
   );
 };

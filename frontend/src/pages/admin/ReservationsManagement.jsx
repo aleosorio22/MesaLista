@@ -1,30 +1,26 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Calendar, Search, Filter, Users, Clock, MapPin } from 'lucide-react';
 import reservationService from '../../services/reservationService';
 import { useAuth } from '../../contexts/AuthContext';
-import CreateReservationModal from './CreateReservationModal';
 import ReservationCard from './ReservationCard';
 import ReservationFilters from './ReservationFilters';
-import ReservationDetailsModal from './ReservationDetailsModal';
-import EditReservationModal from './EditReservationModal';
 import DeleteReservationModal from './DeleteReservationModal';
 import { formatDisplayDate, formatLocalDate } from '../../utils/dateUtils';
 
 export default function ReservationsManagement() {
   const { auth } = useAuth();
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState([]);
   const [filteredReservations, setFilteredReservations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState(''); // Quitar fecha por defecto para búsqueda global
+  const [selectedDate, setSelectedDate] = useState('');
   const [filters, setFilters] = useState({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
-  const [showDetailsModal, setShowDetailsModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState(null);
-  const [searchMode, setSearchMode] = useState(false); // Nuevo estado para modo de búsqueda
+  const [searchMode, setSearchMode] = useState(false);
 
   // Permisos basados en rol
   const isAdmin = auth?.user?.rol === 'admin';
@@ -105,7 +101,6 @@ export default function ReservationsManagement() {
   };
 
   const handleCreateSuccess = () => {
-    setShowCreateModal(false);
     if (searchMode) {
       loadReservationsWithSearch();
     } else {
@@ -147,22 +142,17 @@ export default function ReservationsManagement() {
     }
   };
 
-  // Funciones de manejo de modales
-  const closeModals = () => {
-    setShowDetailsModal(false);
-    setShowEditModal(false);
-    setShowDeleteModal(false);
-    setSelectedReservation(null);
+  // Funciones de navegación
+  const handleCreateReservation = () => {
+    navigate('/admin/reservaciones/crear');
   };
 
   const handleViewReservation = (reservation) => {
-    setSelectedReservation(reservation);
-    setShowDetailsModal(true);
+    navigate(`/admin/reservaciones/${reservation.id}/ver`);
   };
 
   const handleEditReservation = (reservation) => {
-    setSelectedReservation(reservation);
-    setShowEditModal(true);
+    navigate(`/admin/reservaciones/${reservation.id}/editar`);
   };
 
   const handleDeleteReservation = (reservation) => {
@@ -170,17 +160,9 @@ export default function ReservationsManagement() {
     setShowDeleteModal(true);
   };
 
-  const handleEditSuccess = () => {
-    closeModals();
-    if (searchMode) {
-      loadReservationsWithSearch();
-    } else {
-      loadReservations();
-    }
-  };
-
   const handleDeleteSuccess = () => {
-    closeModals();
+    setShowDeleteModal(false);
+    setSelectedReservation(null);
     if (searchMode) {
       loadReservationsWithSearch();
     } else {
@@ -218,7 +200,7 @@ export default function ReservationsManagement() {
           </div>
           {canCreateReservations && (
             <button
-              onClick={() => setShowCreateModal(true)}
+              onClick={handleCreateReservation}
               className="bg-primary-500 hover:bg-primary-600 text-white p-3 rounded-full shadow-lg transition-colors"
             >
               <Plus className="w-6 h-6" />
@@ -345,8 +327,6 @@ export default function ReservationsManagement() {
                             reservation={reservation}
                             canModify={canModifyAny || (isVisualizer && reservation.usuario_id === auth.user.id)}
                             onUpdate={() => searchMode ? loadReservationsWithSearch() : loadReservations()}
-                            onView={handleViewReservation}
-                            onEdit={handleEditReservation}
                             onDelete={handleDeleteReservation}
                           />
                         ))}
@@ -419,7 +399,7 @@ export default function ReservationsManagement() {
             </p>
             {canCreateReservations && (
               <button
-                onClick={() => setShowCreateModal(true)}
+                onClick={handleCreateReservation}
                 className="btn-primary inline-flex items-center space-x-2"
               >
                 <Plus className="w-4 h-4" />
@@ -430,41 +410,14 @@ export default function ReservationsManagement() {
         )}
       </div>
 
-      {/* Modal de crear reservación */}
-      {showCreateModal && (
-        <CreateReservationModal
-          isOpen={showCreateModal}
-          onClose={() => setShowCreateModal(false)}
-          onSuccess={handleCreateSuccess}
-        />
-      )}
-
-      {/* Modal de detalles */}
-      {showDetailsModal && selectedReservation && (
-        <ReservationDetailsModal
-          isOpen={showDetailsModal}
-          onClose={closeModals}
-          reservationId={selectedReservation.id}
-          canModify={canModifyAny || (isVisualizer && selectedReservation.usuario_id === auth.user.id)}
-          onUpdate={loadReservations}
-        />
-      )}
-
-      {/* Modal de edición */}
-      {showEditModal && selectedReservation && (
-        <EditReservationModal
-          isOpen={showEditModal}
-          onClose={closeModals}
-          reservation={selectedReservation}
-          onSuccess={handleEditSuccess}
-        />
-      )}
-
-      {/* Modal de eliminación */}
+      {/* Modal de eliminación - mantenemos solo este */}
       {showDeleteModal && selectedReservation && (
         <DeleteReservationModal
           isOpen={showDeleteModal}
-          onClose={closeModals}
+          onClose={() => {
+            setShowDeleteModal(false);
+            setSelectedReservation(null);
+          }}
           reservation={selectedReservation}
           onSuccess={handleDeleteSuccess}
         />

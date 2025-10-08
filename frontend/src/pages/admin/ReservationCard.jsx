@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Clock, Users, MapPin, Phone, Edit, Trash2, Eye, DollarSign, MoreVertical } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { formatDisplayDate } from '../../utils/dateUtils';
 
-export default function ReservationCard({ reservation, canModify, onUpdate, onView, onEdit, onDelete }) {
+export default function ReservationCard({ reservation, canModify, onUpdate, onDelete }) {
   const { auth } = useAuth();
+  const navigate = useNavigate();
   const [showActions, setShowActions] = useState(false);
 
   const formatTime = (time) => {
@@ -60,16 +62,20 @@ export default function ReservationCard({ reservation, canModify, onUpdate, onVi
     }
   };
 
+  const handleCardClick = () => {
+    navigate(`/admin/reservaciones/${reservation.id}/ver`);
+  };
+
   const handleActionClick = (e, action) => {
     e.stopPropagation();
     setShowActions(false);
     
     switch (action) {
       case 'view':
-        if (onView) onView(reservation);
+        navigate(`/admin/reservaciones/${reservation.id}/ver`);
         break;
       case 'edit':
-        if (onEdit) onEdit(reservation);
+        navigate(`/admin/reservaciones/${reservation.id}/editar`);
         break;
       case 'delete':
         if (onDelete) onDelete(reservation);
@@ -78,7 +84,10 @@ export default function ReservationCard({ reservation, canModify, onUpdate, onVi
   };
 
   return (
-    <div className="bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+    <div 
+      className="bg-white rounded-xl border border-neutral-200 overflow-hidden shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+      onClick={handleCardClick}
+    >
       {/* Header de la tarjeta */}
       <div className="p-4 pb-3">
         <div className="flex items-start justify-between">
